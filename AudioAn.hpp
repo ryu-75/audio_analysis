@@ -4,23 +4,37 @@
 #include <cstring>
 #include <algorithm>
 #include <list>
+#include <dirent.h>
+#include <sys/types.h>
+#include <filesystem>
 
-// template <typename T>
 class AudioAn
 {
-	// ***************** ALIASES ********************
 	public:
+		// ***************** ALIASES ********************
 		typedef std::list<std::string>	files;
+		typedef std::list<std::string>	wav;
+		typedef std::list<std::string>	mp3;
 
-		AudioAn(char **av, uint _nbFiles);
+		// ***************** STRUCTURE ******************
+		struct dirent	*entry;
+
+		AudioAn(std::string path);
 		AudioAn(const AudioAn &lhs);
+
+		template <typename T>
+		void	freeList(T& content);
+
+		template <typename T>
+		void	splitByExt(T& content);
 
 		AudioAn&	operator=(const AudioAn &copy);
 
 		~AudioAn();
 
-		bool	parsFilesExt(char *files);
+		bool	parsFilesExt(std::string files);
 		void	displayContent(void) const;
+		void	parseFiles(std::string path);
 
 		class ParsException
 		{
@@ -32,6 +46,7 @@ class AudioAn
 		};
 	private:
 		AudioAn();
-		uint	_nbFiles;
 		files	_files;
+		wav	_wav;
+		mp3	_mp3;
 };

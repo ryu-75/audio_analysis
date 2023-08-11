@@ -33,7 +33,7 @@ $(OBJ_DIR)%.o	: 	%.cpp AudioAn.hpp
 # ................... COMPILER ................................
 
 CPP				= c++
-CPP_FLAG		= -std=c++98
+CPP_FLAG		= -std=c++17
 FLAGS			= -Wall -Wextra -Werror #-g
 $(EXEC)			: $(OBJS)
 					@$(CPP) $(CPP_FLAG) $(FLAGS) $(OBJS) -o $(EXEC)
