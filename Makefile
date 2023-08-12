@@ -1,3 +1,5 @@
+# AJOUTER => Vérifier si libsndfile1-dev est installer en vérifiant avec "libsndfile1-dev --version" ; SI OUI installe la librairie; SI NON rien faire
+
 # .................. COLORS ...................................
 
 _BOLD      =\e[1m
@@ -34,9 +36,9 @@ $(OBJ_DIR)%.o	: 	%.cpp AudioAn.hpp
 
 CPP				= c++
 CPP_FLAG		= -std=c++17
-FLAGS			= -Wall -Wextra -Werror #-g
+FLAGS			= -Wall -Wextra -Werror -g
 $(EXEC)			: $(OBJS)
-					@$(CPP) $(CPP_FLAG) $(FLAGS) $(OBJS) -o $(EXEC)
+					@$(CPP) $(CPP_FLAG) $(FLAGS) $(OBJS) -o $(EXEC) -lsndfile -lfftw3
 					@printf "$(_RED)$(_BOLD)Compiled : $(_WHITE)$(EXEC)$(_R)\n\n"
 					@printf "$(CPP) $(_BOLD)$(_GREEN)$(CPP_FLAG) $(_BLUE)$(FLAGS) $(_WHITE)main.cpp$(_R)\n"
 					@printf "$(CPP) $(_BOLD)$(_GREEN)$(CPP_FLAG) $(_BLUE)$(FLAGS) $(_WHITE)AudioAn.cpp$(_R)\n\n"
