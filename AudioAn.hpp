@@ -19,8 +19,6 @@ class AudioAn
 		typedef std::list<std::string>	files;
 		typedef std::list<std::pair<std::string, const int >>	wav;
 
-		// ***************** STRUCTURE ******************
-
 		// *************** CONST / DEST *****************
 		AudioAn(std::string path);
 		AudioAn(const AudioAn &lhs);
@@ -34,8 +32,8 @@ class AudioAn
 		template <typename T>
 		void	fillContainer(T& content);
 
-		template <typename T>
-		void	displayContent(T& cont1) const;
+		// template <typename T>
+		// void	displayContent(T& cont1) const;
 
 		template <typename T>
 		void	applyFFT(T& content);
@@ -43,9 +41,13 @@ class AudioAn
 		// ************** METHODS ***********************
 		bool	parsFilesExt(std::string files);
 		void	parseFiles(std::string path);
-		int	samplingSize(std::string path);
-		int findPeakIndex(std::vector<fftw_complex>& output);
-		void applyHammingWindow(std::vector<double>& input);
+		int		samplingSize(std::string path);
+		int		findPeakIndex(std::vector<fftw_complex>& output);
+		void	applyHammingWindow(std::vector<double>& input);
+		void	convertFreq(double fundamental);
+		void	lowPassFilter(std::vector<fftw_complex>& output, double cutoff, double sampleRate);
+		void	highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate);
+		void	displayContent(std::string filename, int sampleRate, double fundamentalFreq) const;
 
 		// ************** EXCEPTION *********************
 		class ParsException

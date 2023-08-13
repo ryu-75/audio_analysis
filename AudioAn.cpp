@@ -42,20 +42,20 @@ bool	AudioAn::parsFilesExt(std::string files)
 	return (false);
 }
 
-template <typename T>
-void	AudioAn::displayContent(T& content) const
-{
-	typename T::const_iterator	wavIt = content.begin();
+// template <typename T>
+// void	AudioAn::displayContent(T& content) const
+// {
+// 	typename T::const_iterator	wavIt = content.begin();
 
-	std::cout << "#\e[1m\e[34m[WAV]#\e[0m" << std::endl;
-	for (; wavIt != content.end(); wavIt++)
-	{
-		std::cout << "\e[1m\e[34mFile\e[0m : " << wavIt->first << std::endl;
-		std::cout << "\e[1m\e[35mSize\e[0m : " << wavIt->second << "Khz" << std::endl;
-		if (std::next(wavIt) != content.end())
-			std::cout << std::endl;
-	}
-}
+// 	std::cout << "#\e[1m\e[34m[WAV]#\e[0m" << std::endl;
+// 	for (; wavIt != content.end(); wavIt++)
+// 	{
+// 		std::cout << "\e[1m\e[34mFile\e[0m : " << wavIt->first << std::endl;
+// 		std::cout << "\e[1m\e[35mSize\e[0m : " << wavIt->second << "Khz" << std::endl;
+// 		if (std::next(wavIt) != content.end())
+// 			std::cout << std::endl;
+// 	}
+// }
 
 void	AudioAn::parseFiles(std::string path)
 {
@@ -147,22 +147,33 @@ void	AudioAn::applyFFT(T& content)
 		std::vector<fftw_complex> output(size / 2 + 1);
 		fftw_plan	plan = fftw_plan_dft_r2c_1d(size, &input[0], &output[0], FFTW_ESTIMATE);
 		if (!plan)
-			throw ParsException("Error: creation FFt plan");
+			throw ParsException("Error: creation FFT plan");
 
 		fftw_execute(plan);
+
+		highPassFilter(input, 31, size);
+		lowPassFilter(output, 20000, size);
 
 		int	peakIndex = findPeakIndex(output);
 
 		double	sampleRate = static_cast<double>(size);
 		double	fundamentalFreq = peakIndex * (sampleRate / size);
 
-		std::cout << "\e[1m\e[34mFilename :\e[0m" << it->first << std::endl;
-		std::cout << "\e[1m\e[35mSize :\e[0m " << it->second << "Hz" << std::endl;
-		std::cout << "\e[1m\e[31mFundamental frequency in Hz :\e[0m " << fundamentalFreq << "Hz" << std::endl;
+		displayContent(it->first, it->second, fundamentalFreq);
+		
+		convertFreq(fundamentalFreq);
 
 		fftw_destroy_plan(plan);
 		sf_close(sndfile);
 	}
+	fftw_cleanup();
+}
+
+void	AudioAn::displayContent(std::string filename, int sampleRate, double fundamentalFreq) const
+{
+	std::cout << "\e[1m\e[34mFilename :\e[0m" << filename << std::endl;
+	std::cout << "\e[1m\e[35mSize :\e[0m " << sampleRate << "Hz" << std::endl;
+	std::cout << "\e[1m\e[31mFundamental :\e[0m " << fundamentalFreq << "Hz" << std::endl;
 }
 
 int AudioAn::findPeakIndex(std::vector<fftw_complex>& output)
@@ -187,5 +198,51 @@ void	AudioAn::applyHammingWindow(std::vector<double>& input)
 {
 	int size = static_cast<int>(input.size());
 	for (int i = 0; i < size; i++)
-		input[i] = input[i] * (0.54 - 0.46 * cos(2 * M_PI * i / (size - 1)));
+		input[i] *= (0.54 - 0.46 * cos(2 * M_PI * i / (size - 1)));
+}
+
+void	AudioAn::convertFreq(double fundamental)
+{
+	double	freqRef = 440.0;
+
+	double	n = 12.0 * std::log2(fundamental / freqRef);
+	while (n < 0)
+		n += 12.0;
+
+	const char*	key[] = { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
+
+	int	noteIndex = static_cast<int>(n + 0.5) % 12;
+	double	semitonDiff = 12.0 * std::log2(fundamental / freqRef);
+	int	octave = 4 + static_cast<int>(semitonDiff / 12.0);
+
+	std::cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << octave << std::endl;
+	std::cout << "\e[1mOctave :\e[0m " << octave << std::endl;
+	std::cout << std::endl;
+}
+
+void	AudioAn::lowPassFilter(std::vector<fftw_complex>& output, double cutoffFrequency, double sampleRate)
+{
+	int	size = static_cast<int>(output.size());
+
+	for (int i = 0; i < size; i++)
+	{
+		double	frequency = static_cast<double>(i) / size * sampleRate;
+		if (frequency > cutoffFrequency)
+		{
+			output[i][0] = 0.0;
+			output[i][1] = 0.0;
+		}
+	}
+}
+
+void	AudioAn::highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate)
+{
+	int	size = static_cast<int>(input.size());
+
+	for (int i = 0; i < size; i++)
+	{
+		double	frequency = static_cast<double>(i) * sampleRate / size;
+		if (frequency < cutoffFrequency)
+			input[i] = 0.0;
+	}
 }
