@@ -17,6 +17,7 @@ class AudioAn
 	public:
 		// ***************** ALIASES ********************
 		typedef std::list<std::string>	files;
+		typedef std::list<std::pair<std::string, int >>	keys;
 		typedef std::list<std::pair<std::string, const int >>	wav;
 
 		// *************** CONST / DEST *****************
@@ -32,8 +33,8 @@ class AudioAn
 		template <typename T>
 		void	fillContainer(T& content);
 
-		// template <typename T>
-		// void	displayContent(T& cont1) const;
+		template <typename T>
+		void	renameAll(T& content, std::string path);
 
 		template <typename T>
 		void	applyFFT(T& content);
@@ -48,6 +49,7 @@ class AudioAn
 		void	lowPassFilter(std::vector<fftw_complex>& output, double cutoff, double sampleRate);
 		void	highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate);
 		void	displayContent(std::string filename, int sampleRate, double fundamentalFreq) const;
+		bool	keyAlreadyExist(std::string fileName);
 
 		// ************** EXCEPTION *********************
 		class ParsException
@@ -62,4 +64,5 @@ class AudioAn
 		AudioAn();
 		files	_files;
 		wav	_wav;
+		keys	_keys;
 };

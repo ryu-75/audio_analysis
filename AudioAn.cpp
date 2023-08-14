@@ -7,7 +7,7 @@ AudioAn::AudioAn(std::string path)
 	parseFiles(path);
 	fillContainer(this->_files);
 	applyFFT(this->_wav);
-	// displayContent(this->_wav);
+	renameAll(this->_keys, path);
 }
 
 AudioAn::AudioAn(const AudioAn &lhs)
@@ -37,25 +37,9 @@ bool	AudioAn::parsFilesExt(std::string files)
 			return (false);
 		else if (std::string::npos != files.find(".wav"))
 			return (true);
-
 	}
 	return (false);
 }
-
-// template <typename T>
-// void	AudioAn::displayContent(T& content) const
-// {
-// 	typename T::const_iterator	wavIt = content.begin();
-
-// 	std::cout << "#\e[1m\e[34m[WAV]#\e[0m" << std::endl;
-// 	for (; wavIt != content.end(); wavIt++)
-// 	{
-// 		std::cout << "\e[1m\e[34mFile\e[0m : " << wavIt->first << std::endl;
-// 		std::cout << "\e[1m\e[35mSize\e[0m : " << wavIt->second << "Khz" << std::endl;
-// 		if (std::next(wavIt) != content.end())
-// 			std::cout << std::endl;
-// 	}
-// }
 
 void	AudioAn::parseFiles(std::string path)
 {
@@ -70,7 +54,6 @@ void	AudioAn::parseFiles(std::string path)
 		if (entry->d_type == DT_REG)
 		{
 			std::string	fileName = entry->d_name;
-
 			filePath = path + "/" + fileName;
 			if ((!fileName.empty() && fileName[0] == '.') ||\
 				parsFilesExt(filePath) == false)
@@ -160,7 +143,7 @@ void	AudioAn::applyFFT(T& content)
 		double	fundamentalFreq = peakIndex * (sampleRate / size);
 
 		displayContent(it->first, it->second, fundamentalFreq);
-		
+
 		convertFreq(fundamentalFreq);
 
 		fftw_destroy_plan(plan);
@@ -215,6 +198,8 @@ void	AudioAn::convertFreq(double fundamental)
 	double	semitonDiff = 12.0 * std::log2(fundamental / freqRef);
 	int	octave = 4 + static_cast<int>(semitonDiff / 12.0);
 
+	this->_keys.push_back(std::make_pair(key[noteIndex], octave));
+
 	std::cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << octave << std::endl;
 	std::cout << "\e[1mOctave :\e[0m " << octave << std::endl;
 	std::cout << std::endl;
@@ -245,4 +230,55 @@ void	AudioAn::highPassFilter(std::vector<double>& input, double cutoffFrequency,
 		if (frequency < cutoffFrequency)
 			input[i] = 0.0;
 	}
+}
+
+template <typename T>
+void	AudioAn::renameAll(T& content, std::string path)
+{
+	DIR*	dir = opendir(path.c_str());
+
+	if (dir == NULL)
+		throw ParsException("Error: Cannot open the repository");
+	struct dirent *entry;
+	typename T::iterator	it = content.begin();
+	int	i = 0;
+	while ((entry = readdir(dir)) != NULL && it != content.end())
+	{
+		if (entry->d_type == DT_REG)
+		{
+			std::string	name = path + '/' + entry->d_name;
+
+			std::cout << "old name : " << name << std::endl;
+			std::string	newName;
+			if (keyAlreadyExist(name) == false)
+				newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + ".wav";
+			else
+				newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + ".wav";
+			std::cout << "New name : " << newName << std::endl;
+
+			if (rename(name.c_str(), newName.c_str()) != 0)
+				throw ParsException("Error: Can not rename the audio file");
+			it++;
+			i++;
+		}
+	}
+}
+
+bool	AudioAn::keyAlreadyExist(std::string fileName)
+{
+	for (size_t i = 0; i < fileName.length(); i++)
+	{
+		if (fileName[i])
+		{
+			while (fileName[i] != '\0')
+			{
+				if (fileName[i] == '_')
+					return (false);
+				else if (fileName[i] == '.')
+					return (true);
+				i++;
+			}
+		}
+	}
+	return (false);
 }
