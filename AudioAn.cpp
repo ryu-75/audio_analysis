@@ -55,7 +55,7 @@ void	AudioAn::parseFiles(std::string path)
 		if (entry->d_type == DT_REG)
 		{
 			std::string	fileName = entry->d_name;
-			filePath = path + fileName;
+			filePath = path + '/' + fileName;
 			if (parsFilesExt(filePath) == false)
 			{
 				this->_error.push_back(filePath);
@@ -234,7 +234,7 @@ void	AudioAn::renameAll(T& content, U& error, std::string path)
 	{
 		if (entry->d_type == DT_REG)
 		{
-			std::string	name = path  + entry->d_name;
+			std::string	name = path + '/' + entry->d_name;
 
 			if (alreadyExist(name) == true)
 			{

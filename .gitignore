@@ -1,5 +1,4 @@
 .vscode/
 obj/
 AudioAnalysis
-audios/
-original/
+files/
