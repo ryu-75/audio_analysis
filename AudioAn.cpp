@@ -250,10 +250,11 @@ void	AudioAn::renameAll(T& content, std::string path)
 
 			std::cout << "old name : " << name << std::endl;
 			std::string	newName;
+			char	octave = it->second + '0';
 			if (keyAlreadyExist(name) == false)
-				newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + ".wav";
+				newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + ".wav";
 			else
-				newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + ".wav";
+				newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + ".wav";
 			std::cout << "New name : " << newName << std::endl;
 
 			if (rename(name.c_str(), newName.c_str()) != 0)
