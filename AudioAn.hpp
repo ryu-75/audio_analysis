@@ -19,7 +19,7 @@ class AudioAn
 		typedef std::list<std::string>	files;
 		typedef std::list<std::pair<std::string, int >>	keys;
 		typedef std::list<std::pair<std::string, const int >>	wav;
-
+		typedef std::list<std::string>	error;
 		// *************** CONST / DEST *****************
 		AudioAn(std::string path);
 		AudioAn(const AudioAn &lhs);
@@ -33,8 +33,8 @@ class AudioAn
 		template <typename T>
 		void	fillContainer(T& content);
 
-		template <typename T>
-		void	renameAll(T& content, std::string path);
+		template <typename T, typename U>
+		void	renameAll(T& content, U& error, std::string path);
 
 		template <typename T>
 		void	applyFFT(T& content);
@@ -49,7 +49,8 @@ class AudioAn
 		void	lowPassFilter(std::vector<fftw_complex>& output, double cutoff, double sampleRate);
 		void	highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate);
 		void	displayContent(std::string filename, int sampleRate, double fundamentalFreq) const;
-		bool	keyAlreadyExist(std::string fileName);
+		bool	checkSymbol(std::string fileName);
+		bool	alreadyExist(std::string fileName);
 
 		// ************** EXCEPTION *********************
 		class ParsException
@@ -65,4 +66,5 @@ class AudioAn
 		files	_files;
 		wav	_wav;
 		keys	_keys;
+		error	_error;
 };

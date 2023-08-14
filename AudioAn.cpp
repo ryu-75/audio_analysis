@@ -7,7 +7,7 @@ AudioAn::AudioAn(std::string path)
 	parseFiles(path);
 	fillContainer(this->_files);
 	applyFFT(this->_wav);
-	renameAll(this->_keys, path);
+	renameAll(this->_keys, this->_error, path);
 }
 
 AudioAn::AudioAn(const AudioAn &lhs)
@@ -33,7 +33,8 @@ bool	AudioAn::parsFilesExt(std::string files)
 	for (size_t i = 0; i < files.size(); i++)
 	{
 		if (std::string::npos != files.find(".pdf") || \
-			std::string::npos != files.find(".wav.asd"))
+			std::string::npos != files.find(".wav.asd") || \
+				(!files.empty() && files[0] == '.'))
 			return (false);
 		else if (std::string::npos != files.find(".wav"))
 			return (true);
@@ -54,10 +55,12 @@ void	AudioAn::parseFiles(std::string path)
 		if (entry->d_type == DT_REG)
 		{
 			std::string	fileName = entry->d_name;
-			filePath = path + "/" + fileName;
-			if ((!fileName.empty() && fileName[0] == '.') ||\
-				parsFilesExt(filePath) == false)
+			filePath = path + fileName;
+			if (parsFilesExt(filePath) == false)
+			{
+				this->_error.push_back(filePath);
 				continue ;
+			}
 			else
 				this->_files.push_back(filePath);
 		}
@@ -79,12 +82,8 @@ void	AudioAn::fillContainer(T& content)
 	{
 		SF_INFO	fileInfo;
 		SNDFILE*	sndfile = sf_open(it->c_str(), SFM_READ, &fileInfo);
-		if (!sndfile)
-		{
-			std::cerr << sf_error(sndfile) << std::endl;
-			throw ParsException("Error: cannot open the audio file");
-		}
 		int	size = fileInfo.samplerate;
+
 		if (std::string::npos != it->find(".wav") && size != 0)
 			this->_wav.push_back(std::make_pair(*it, size));
 		sf_close(sndfile);
@@ -109,43 +108,30 @@ template <typename T>
 void	AudioAn::applyFFT(T& content)
 {
 	typename T::const_iterator	it = content.begin();
+
 	for (; it != content.end(); it++)
 	{
 		SF_INFO	fileInfo;
 		SNDFILE*	sndfile = sf_open(it->first.c_str(), SFM_READ, &fileInfo);
-		if (!sndfile)
-		{
-			std::cerr << sf_error(sndfile) << std::endl;
-			throw ParsException("Error: cannot open the audio file");
-		}
-
 		int	size = fileInfo.samplerate;
-
 		std::vector<double> input(size);
 
 		sf_read_double(sndfile, &input[0], size);
-
 		applyHammingWindow(input);
 
 		std::vector<fftw_complex> output(size / 2 + 1);
 		fftw_plan	plan = fftw_plan_dft_r2c_1d(size, &input[0], &output[0], FFTW_ESTIMATE);
 		if (!plan)
 			throw ParsException("Error: creation FFT plan");
-
 		fftw_execute(plan);
-
 		highPassFilter(input, 31, size);
 		lowPassFilter(output, 20000, size);
-
 		int	peakIndex = findPeakIndex(output);
-
 		double	sampleRate = static_cast<double>(size);
 		double	fundamentalFreq = peakIndex * (sampleRate / size);
 
 		displayContent(it->first, it->second, fundamentalFreq);
-
 		convertFreq(fundamentalFreq);
-
 		fftw_destroy_plan(plan);
 		sf_close(sndfile);
 	}
@@ -200,7 +186,7 @@ void	AudioAn::convertFreq(double fundamental)
 
 	this->_keys.push_back(std::make_pair(key[noteIndex], octave));
 
-	std::cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << octave << std::endl;
+	std::cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << std::endl;
 	std::cout << "\e[1mOctave :\e[0m " << octave << std::endl;
 	std::cout << std::endl;
 }
@@ -232,40 +218,78 @@ void	AudioAn::highPassFilter(std::vector<double>& input, double cutoffFrequency,
 	}
 }
 
-template <typename T>
-void	AudioAn::renameAll(T& content, std::string path)
+template <typename T, typename U>
+void	AudioAn::renameAll(T& content, U& error, std::string path)
 {
 	DIR*	dir = opendir(path.c_str());
 
 	if (dir == NULL)
 		throw ParsException("Error: Cannot open the repository");
+
 	struct dirent *entry;
 	typename T::iterator	it = content.begin();
-	int	i = 0;
+	int	i = 1;
+
 	while ((entry = readdir(dir)) != NULL && it != content.end())
 	{
 		if (entry->d_type == DT_REG)
 		{
-			std::string	name = path + '/' + entry->d_name;
+			std::string	name = path  + entry->d_name;
 
-			std::cout << "old name : " << name << std::endl;
-			std::string	newName;
-			char	octave = it->second + '0';
-			if (keyAlreadyExist(name) == false)
-				newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + ".wav";
+			if (alreadyExist(name) == true)
+			{
+				SF_INFO	sfInfo;
+				SNDFILE*	sndfile = sf_open(name.c_str(), SFM_READ, &sfInfo);
+				if (parsFilesExt(name) == false)
+					it++;
+				else if (!sndfile)
+				{
+					std::cerr << "Error: unrecognised audio format" << std::endl;
+					continue ;
+				}
+				else
+				{
+					std::cout << "old name : " << name << std::endl;
+					std::string	index = std::to_string(i);
+					std::string	newName;
+					std::string octave = std::to_string(it->second);
+
+					// REVOIR CETTE LIGNE
+					if (checkSymbol(name) == false)
+					{
+						if (i < 10)
+							newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + '_' + '0' + index + ".wav";
+						else
+							newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + '_' + index + ".wav";
+					}
+					else
+					{
+						if (i < 10)
+							newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + '_' + '0' + index + ".wav";
+						else
+							newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + '_' + index + ".wav";
+					}
+					std::cout << "New name : " << newName << std::endl;
+					if (rename(name.c_str(), newName.c_str()) != 0)
+						throw ParsException("Error: Can not rename the audio file");
+					i++;
+				}
+			}
 			else
-				newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + ".wav";
-			std::cout << "New name : " << newName << std::endl;
-
-			if (rename(name.c_str(), newName.c_str()) != 0)
-				throw ParsException("Error: Can not rename the audio file");
-			it++;
-			i++;
+			{
+				std::cout << name << ": key already exist in filename"<< std::endl;
+				continue ;
+			}
 		}
+		it++;
 	}
+	typename U::iterator	itEr = error.begin();
+	for (; itEr != error.end(); itEr++)
+		std::cerr << *itEr << ": accept wav format only"<< std::endl;
+	closedir(dir);
 }
 
-bool	AudioAn::keyAlreadyExist(std::string fileName)
+bool	AudioAn::checkSymbol(std::string fileName)
 {
 	for (size_t i = 0; i < fileName.length(); i++)
 	{
@@ -282,4 +306,20 @@ bool	AudioAn::keyAlreadyExist(std::string fileName)
 		}
 	}
 	return (false);
+}
+
+bool	AudioAn::alreadyExist(std::string filename)
+{
+	const char*	keys[12] = { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
+
+	for (size_t i = 0; i < 12; i++)
+	{
+		for (size_t y = 0; keys[i][y] != '\0'; y++)
+		{
+			for (size_t j = 0; j < filename.size(); j++)
+				if (filename[j] == '_' && filename[j + 1] == keys[i][y])
+					return (false);
+		}
+	}
+	return (true);
 }
