@@ -14,8 +14,13 @@
 </ol>
 
 <h2>Dependencies</h2>
+<h3>FFTW3 Library</h3>
 <ul>
   <li>This program uses the <strong>fftw3</strong> library, a C library that allows for powerful computations using the Fourier theorem.</li>
+</ul>
+<h3>Libsndfile Library</h3>
+<ul>
+  <li>This program also makes use of the <strong>libsndfile</strong> library, another C library allowing for reading and writing audio files containing audio samples.</li>
 </ul>
 
 <h2>Signal Processing</h2>
