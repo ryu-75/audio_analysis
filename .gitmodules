@@ -1,0 +1,3 @@
+[submodule "libsndfil"]
+	path = libsndfil
+	url = git@github.com:libsndfile/libsndfile.git
