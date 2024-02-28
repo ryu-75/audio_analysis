@@ -48,6 +48,6 @@
 </ul>
 <h2>Notes</h2>
 <ul>
-  <li>The program only supports <strong>WAV</strong>files.</li>
+  <li>The program only supports <strong>WAV</strong> files.</li>
   <li>Ensure that the audio files are properly recorded and that the fundamental frequency can be accurately extracted.</li>
 </ul>
