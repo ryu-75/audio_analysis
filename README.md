@@ -7,7 +7,7 @@
 <ol>
   <li>Make sure you have C++ installed on your system.</li>
   <li>Compile the program with <strong>make</strong></li>
-  <li>Then: 
+  <li>Then</li>
     <img src="https://github.com/ryu-75/audio_analysis/assets/79263476/f5a6e80f-aad5-4919-ba3f-85d416df1d08"></img>
     <span>Replace<strong>PATH</strong> with the absolute or relative path to the folder containing the audio files to be analyzed.</span>
   </li>
