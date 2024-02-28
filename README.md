@@ -6,9 +6,9 @@
 <h2>Usage</h2>
 <ol>
   <li>Make sure you have C++ installed on your system.</li>
-  <li>Clone the submodule <strong>libsndfile</strong>strong> into the root directory afterward.</li>
+  <li>Clone the submodule <strong>libsndfile</strong> into the root directory afterward.</li>
   <li>Then, You just have to follow the instructions to install the library here.<li>
-    <href link="https://github.com/libsndfile/libsndfile#hacking"></href>
+    [a link](https://github.com/libsndfile/libsndfile#hacking)
   <li>Compile the program with <strong>make</strong></li>
   <li>Then:</li>
     <img src="https://github.com/ryu-75/audio_analysis/assets/79263476/f5a6e80f-aad5-4919-ba3f-85d416df1d08"></img><br>
