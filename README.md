@@ -9,7 +9,7 @@
   <li>Clone the submodule <strong>libsndfile</strong> into the root directory afterward.</li>
   <li>Then, You just have to follow the instructions to install the library here: <span>https://github.com/libsndfile/libsndfile#hacking<span></span></span></li>
   <li>Compile the program with <strong>make</strong></li>
-  <li>Then:</li>
+  <li>Then for execute:</li>
     <img src="https://github.com/ryu-75/audio_analysis/assets/79263476/f5a6e80f-aad5-4919-ba3f-85d416df1d08"></img><br>
     <span>Replace <strong>PATH</strong> with the absolute or relative path to the folder containing the audio files to be analyzed.</span>
   </li>
