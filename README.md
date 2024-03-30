@@ -8,8 +8,10 @@
 <ol>
   <li>Make sure you have C++ installed on your system.</li>
   <li>Clone the submodule <strong>libsndfile</strong> into the root directory afterward.</li>
-  <li>Then, You just have to follow the instructions to install the library here: <span>https://github.com/libsndfile/libsndfile#hacking<span></span></span></li>
-  <li>Compile the program with <strong>make</strong></li>
+  <li>Then, You just have to follow the instructions to install the library here: <br><span>https://github.com/libsndfile/libsndfile?tab=readme-ov-file#the-cmake-build-system</span></li>
+  <li>After that, you need to install in your terminal <b>fftw3</b>. Run this command :<br>
+      <i>sudo apt install libfftw3-dev</i></li>
+  <li>Then, compile the program with <strong>make</strong></li>
   <li>Then for execute:</li>
     <img src="https://github.com/ryu-75/audio_analysis/assets/79263476/f5a6e80f-aad5-4919-ba3f-85d416df1d08"></img><br>
     <span>Replace <strong>PATH</strong> with the absolute or relative path to the folder containing the audio files to be analyzed.</span>
