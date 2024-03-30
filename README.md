@@ -49,10 +49,10 @@
   <li><strong>sample1.wav</strong></li>
   <li><strong>sample2.wav</strong></li>
 </ul>
-<p>After compiling the program with the <strong>audio_files</strong>strong> folder as an argument, the files will be renamed as follows:</p>
+<p>After compiling the program with the <strong>audio_files</strong> folder as an argument, the files will be renamed as follows:</p>
 <ul>
-  <li><strong>sample1.wav</strong></li>
-  <li><strong>sample2.wav</strong></li>
+  <li><strong>sample1_A.wav</strong></li>
+  <li><strong>sample2_F.wav</strong></li>
 </ul>
 <h2>Notes</h2>
 <ul>
