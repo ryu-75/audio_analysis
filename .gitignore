@@ -1,4 +1,4 @@
-.vscode/
-obj/
+.vscode
+obj
 AudioAnalysis
-files/
+test_analyse_audio_sample

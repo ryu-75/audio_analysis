@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
+#include <vector>
 #include <list>
 #include <dirent.h>
 #include <sys/types.h>
@@ -12,16 +13,28 @@
 #include <fftw3.h>
 #include <cmath>
 
+// Namespace
+using	std::string;
+using	std::list; 
+using	std::vector;
+using	std::pair;
+using	std::make_pair;
+using	std::cout;
+using	std::endl;
+using	std::log2;
+using	std::cerr;
+using	std::to_string;
+
 class AudioAn
 {
 	public:
 		// ***************** ALIASES ********************
-		typedef std::list<std::string>	files;
-		typedef std::list<std::pair<std::string, int >>	keys;
-		typedef std::list<std::pair<std::string, const int >>	wav;
-		typedef std::list<std::string>	error;
+		typedef list<string>	files;
+		typedef list<string>	keys;
+		typedef list<pair<string, const int >>	wav;
+		typedef list<string>	error;
 		// *************** CONST / DEST *****************
-		AudioAn(std::string path);
+		AudioAn(string path);
 		AudioAn(const AudioAn &lhs);
 		AudioAn&	operator=(const AudioAn &copy);
 		~AudioAn();
@@ -34,32 +47,37 @@ class AudioAn
 		void	fillContainer(T& content);
 
 		template <typename T, typename U>
-		void	renameAll(T& content, U& error, std::string path);
+		void	renameAll(T& notes, U& error, string path);
 
 		template <typename T>
 		void	applyFFT(T& content);
 
+		template <typename T>
+		void	print(T& files);
+
 		// ************** METHODS ***********************
-		bool	parsFilesExt(std::string files);
-		void	parseFiles(std::string path);
-		int		samplingSize(std::string path);
-		int		findPeakIndex(std::vector<fftw_complex>& output);
-		void	applyHammingWindow(std::vector<double>& input);
+		void	parseFiles(string path);
+		int		samplingSize(string path);
+		int		findPeakIndex(vector<fftw_complex>& output);
+		void	applyHammingWindow(vector<double>& input);
 		void	convertFreq(double fundamental);
-		void	lowPassFilter(std::vector<fftw_complex>& output, double cutoff, double sampleRate);
-		void	highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate);
-		void	displayContent(std::string filename, int sampleRate, double fundamentalFreq) const;
-		bool	checkSymbol(std::string fileName);
-		bool	alreadyExist(std::string fileName);
+		void	lowPassFilter(vector<fftw_complex>& output, double cutoff, double sampleRate);
+		void	highPassFilter(vector<double>& input, double cutoffFrequency, double sampleRate);
+		void	displayContent(string filename, int sampleRate, double fundamentalFreq) const;
+		bool	checkSymbol(string fileName);
+		bool	alreadyExist(string fileName);
+		bool	parsFilesExt(string files);
+		string	getAudioExtension(const string &filename);
+
 
 		// ************** EXCEPTION *********************
 		class ParsException
 		{
 			public:
-				ParsException(const std::string message) : _message(message) {};
+				ParsException(const string message) : _message(message) {};
 			const char*	what() throw();
 			private:
-				std::string	_message;
+				string	_message;
 		};
 	private:
 		AudioAn();
