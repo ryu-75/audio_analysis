@@ -28,7 +28,8 @@ int	main(int ac, char **av)
 		try
 		{
 			std::string	path = av[1];
-			AudioAn	audio(path);
+			AudioAn	*audio = new AudioAn(path);
+			delete audio;
 		}
 		catch(AudioAn::ParsException& e)
 		{

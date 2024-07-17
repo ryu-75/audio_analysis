@@ -12,12 +12,14 @@
 #include <sndfile.h>
 #include <fftw3.h>
 #include <cmath>
+#include <sstream>
 
 // Namespace
 using	std::string;
 using	std::list; 
 using	std::vector;
 using	std::pair;
+using	std::size_t;
 using	std::make_pair;
 using	std::cout;
 using	std::endl;
@@ -47,7 +49,7 @@ class AudioAn
 		void	fillContainer(T& content);
 
 		template <typename T, typename U>
-		void	renameAll(T& notes, U& error, string path);
+		void	renameAll(T& notes, U& error, const string &path);
 
 		template <typename T>
 		void	applyFFT(T& content);
@@ -67,6 +69,7 @@ class AudioAn
 		bool	checkSymbol(string fileName);
 		bool	alreadyExist(string fileName);
 		bool	parsFilesExt(string files);
+		bool	checkPath(const string &path);
 		string	getAudioExtension(const string &filename);
 
 
