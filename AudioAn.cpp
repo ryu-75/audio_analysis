@@ -2,7 +2,7 @@
 
 const char*	AudioAn::ParsException::what() throw() { return (_message.c_str()); }
 
-AudioAn::AudioAn(std::string path)
+AudioAn::AudioAn(string path)
 {
 	parseFiles(path);
 	fillContainer(this->_files);
@@ -28,33 +28,34 @@ AudioAn&	AudioAn::operator=(const AudioAn &copy)
 
 AudioAn::~AudioAn() {}
 
-bool	AudioAn::parsFilesExt(std::string files)
+bool	AudioAn::parsFilesExt(string files)
 {
-	for (size_t i = 0; i < files.size(); i++)
+	for (string::size_type i = 0; i < files.size(); i++)
 	{
-		if (std::string::npos != files.find(".pdf") || \
-			std::string::npos != files.find(".wav.asd") || \
-				(!files.empty() && files[0] == '.'))
+		bool	hasPdf = files.find(".pdf") != string::npos;
+		bool	hasWavAsd = files.find(".wav.asd") != string::npos;
+		bool	startWithDot = !files.empty() && files[0] == '.';
+		if (hasPdf || hasWavAsd || startWithDot)
 			return (false);
-		else if (std::string::npos != files.find(".wav"))
+		else if (string::npos != files.find(".wav"))
 			return (true);
 	}
 	return (false);
 }
 
-void	AudioAn::parseFiles(std::string path)
+void	AudioAn::parseFiles(string path)
 {
 	DIR*	dir = opendir(path.c_str());
-	std::string	filePath;
+	string	filePath;
 
-	if (dir == NULL)
+	if (dir == nullptr)
 		throw ParsException("Error: Cannot open the repository");
 	struct dirent *entry;
-	while ((entry = readdir(dir)) != NULL)
+	while ((entry = readdir(dir)) != nullptr)
 	{
 		if (entry->d_type == DT_REG)
 		{
-			std::string	fileName = entry->d_name;
+			string	fileName = entry->d_name;
 			filePath = path + '/' + fileName;
 			if (parsFilesExt(filePath) == false)
 			{
@@ -74,6 +75,17 @@ void	AudioAn::parseFiles(std::string path)
 }
 
 template <typename T>
+void	AudioAn::print(T& files)
+{
+	typename T::iterator	it = files.begin();
+	while (it != files.end()) 
+	{
+		cout << "Files name: " << *it << endl;
+		it++;
+	}
+}
+
+template <typename T>
 void	AudioAn::fillContainer(T& content)
 {
 	typename T::const_iterator	it;
@@ -84,8 +96,8 @@ void	AudioAn::fillContainer(T& content)
 		SNDFILE*	sndfile = sf_open(it->c_str(), SFM_READ, &fileInfo);
 		int	size = fileInfo.samplerate;
 
-		if (std::string::npos != it->find(".wav") && size != 0)
-			this->_wav.push_back(std::make_pair(*it, size));
+		if (string::npos != it->find(".wav") && size != 0)
+			this->_wav.push_back(make_pair(*it, size));
 		sf_close(sndfile);
 	}
 	freeList(content);
@@ -114,12 +126,12 @@ void	AudioAn::applyFFT(T& content)
 		SF_INFO	fileInfo;
 		SNDFILE*	sndfile = sf_open(it->first.c_str(), SFM_READ, &fileInfo);
 		int	size = fileInfo.samplerate;
-		std::vector<double> input(size);
+		vector<double> input(size);
 
 		sf_read_double(sndfile, &input[0], size);
 		applyHammingWindow(input);
 
-		std::vector<fftw_complex> output(size / 2 + 1);
+		vector<fftw_complex> output(size / 2 + 1);
 		fftw_plan	plan = fftw_plan_dft_r2c_1d(size, &input[0], &output[0], FFTW_ESTIMATE);
 		if (!plan)
 			throw ParsException("Error: creation FFT plan");
@@ -138,14 +150,14 @@ void	AudioAn::applyFFT(T& content)
 	fftw_cleanup();
 }
 
-void	AudioAn::displayContent(std::string filename, int sampleRate, double fundamentalFreq) const
+void	AudioAn::displayContent(string filename, int sampleRate, double fundamentalFreq) const
 {
-	std::cout << "\e[1m\e[34mFilename :\e[0m" << filename << std::endl;
-	std::cout << "\e[1m\e[35mSize :\e[0m " << sampleRate << "Hz" << std::endl;
-	std::cout << "\e[1m\e[31mFundamental :\e[0m " << fundamentalFreq << "Hz" << std::endl;
+	cout << "\e[1m\e[34mFilename :\e[0m" << filename << endl;
+	cout << "\e[1m\e[35mSize :\e[0m " << sampleRate << "Hz" << endl;
+	cout << "\e[1m\e[31mFundamental :\e[0m " << fundamentalFreq << "Hz" << endl;
 }
 
-int AudioAn::findPeakIndex(std::vector<fftw_complex>& output)
+int AudioAn::findPeakIndex(vector<fftw_complex>& output)
 {
 	int peakIndex = 0;
 	double maxAmplitude = 0.0;
@@ -163,7 +175,7 @@ int AudioAn::findPeakIndex(std::vector<fftw_complex>& output)
 	return peakIndex;
 }
 
-void	AudioAn::applyHammingWindow(std::vector<double>& input)
+void	AudioAn::applyHammingWindow(vector<double>& input)
 {
 	int size = static_cast<int>(input.size());
 	for (int i = 0; i < size; i++)
@@ -174,24 +186,20 @@ void	AudioAn::convertFreq(double fundamental)
 {
 	double	freqRef = 440.0;
 
-	double	n = 12.0 * std::log2(fundamental / freqRef);
+	double	n = 12.0 * log2(fundamental / freqRef);
 	while (n < 0)
 		n += 12.0;
 
 	const char*	key[] = { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
 
 	int	noteIndex = static_cast<int>(n + 0.5) % 12;
-	double	semitonDiff = 12.0 * std::log2(fundamental / freqRef);
-	int	octave = 4 + static_cast<int>(semitonDiff / 12.0);
+	this->_keys.push_back(key[noteIndex]);
 
-	this->_keys.push_back(std::make_pair(key[noteIndex], octave));
-
-	std::cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << std::endl;
-	std::cout << "\e[1mOctave :\e[0m " << octave << std::endl;
-	std::cout << std::endl;
+	cout << "\e[1m\e[32mKey :\e[0m " << key[noteIndex] << endl;
+	cout << endl;
 }
 
-void	AudioAn::lowPassFilter(std::vector<fftw_complex>& output, double cutoffFrequency, double sampleRate)
+void	AudioAn::lowPassFilter(vector<fftw_complex>& output, double cutoffFrequency, double sampleRate)
 {
 	int	size = static_cast<int>(output.size());
 
@@ -206,7 +214,7 @@ void	AudioAn::lowPassFilter(std::vector<fftw_complex>& output, double cutoffFreq
 	}
 }
 
-void	AudioAn::highPassFilter(std::vector<double>& input, double cutoffFrequency, double sampleRate)
+void	AudioAn::highPassFilter(vector<double>& input, double cutoffFrequency, double sampleRate)
 {
 	int	size = static_cast<int>(input.size());
 
@@ -219,107 +227,117 @@ void	AudioAn::highPassFilter(std::vector<double>& input, double cutoffFrequency,
 }
 
 template <typename T, typename U>
-void	AudioAn::renameAll(T& content, U& error, std::string path)
+void	AudioAn::renameAll(T& notes, U& error, string path)
 {
 	DIR*	dir = opendir(path.c_str());
 
-	if (dir == NULL)
-		throw ParsException("Error: Cannot open the repository");
+	if (dir == nullptr) throw ParsException("Error: Cannot open the repository");
 
 	struct dirent *entry;
-	typename T::iterator	it = content.begin();
+	typename T::iterator	it = notes.begin();
 	int	i = 1;
 
-	while ((entry = readdir(dir)) != NULL && it != content.end())
-	{
-		if (entry->d_type == DT_REG)
-		{
-			std::string	name = path + '/' + entry->d_name;
+	vector<string>	file;
 
-			if (alreadyExist(name) == true)
+	while ((entry = readdir(dir)) != nullptr && it != notes.end())
+	{
+		if (entry->d_type == DT_DIR || entry->d_type == DT_REG)
+		{
+			if (string(entry->d_name) == "." || string(entry->d_name) == "..")
 			{
+				continue ;
+			}
+			else 
+			{
+				string	name = path + '/' + entry->d_name;
+				string	extName = "." + getAudioExtension(name);
 				SF_INFO	sfInfo;
 				SNDFILE*	sndfile = sf_open(name.c_str(), SFM_READ, &sfInfo);
 				if (parsFilesExt(name) == false)
-					it++;
+					continue ;
 				else if (!sndfile)
 				{
-					std::cerr << "Error: unrecognised audio format" << std::endl;
+					cerr << "Error: unrecognised audio format" << endl;
 					continue ;
 				}
 				else
 				{
-					std::cout << "old name : " << name << std::endl;
-					std::string	index = std::to_string(i);
-					std::string	newName;
-					std::string octave = std::to_string(it->second);
-
-					// REVOIR CETTE LIGNE
+					cout << "old name : " << name << endl;
+					string	newName;
+					string	index = to_string(i);
 					if (checkSymbol(name) == false)
 					{
-						if (i < 10)
-							newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + '_' + '0' + index + ".wav";
+						string	dirName = name.substr(0, name.find_first_of("/"));
+						string	fileName = name.substr(dirName.length() + 1);
+						if (alreadyExist(fileName)) 
+							newName = dirName + '/' + fileName.substr(0, fileName.find_last_of(".")) + '_' + *it + '_' + (i++ < 10 ? '0' + index : index) + extName;
 						else
-							newName = name.substr(0, name.find_last_of('_')) + '_' + it->first + octave + '_' + index + ".wav";
+							cerr << "Is already renamed" << endl;
+						cout << "New name: " << newName << endl;
 					}
-					else
-					{
-						if (i < 10)
-							newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + '_' + '0' + index + ".wav";
-						else
-							newName = name.substr(0, name.find_last_of('.')) + '_' + it->first + octave + '_' + index + ".wav";
-					}
-					std::cout << "New name : " << newName << std::endl;
 					if (rename(name.c_str(), newName.c_str()) != 0)
-						throw ParsException("Error: Can not rename the audio file");
-					i++;
+						throw ParsException("Error: Cannot rename the audio file");
 				}
 			}
-			else
-			{
-				std::cout << name << ": key already exist in filename"<< std::endl;
-				continue ;
-			}
 		}
+		else 
+			cerr << "It's not a directory or a regular file" << endl;
 		it++;
 	}
 	typename U::iterator	itEr = error.begin();
 	for (; itEr != error.end(); itEr++)
-		std::cerr << *itEr << ": accept wav format only"<< std::endl;
+		cerr << *itEr << ": accept wav format only"<< endl;
 	closedir(dir);
 }
 
-bool	AudioAn::checkSymbol(std::string fileName)
+string	AudioAn::getAudioExtension(const string &filename) {
+	std::size_t	dotPos = filename.rfind(".");
+
+	if (dotPos != std::string::npos) {
+		string	ext = filename.substr(dotPos + 1);
+		if (ext == "wav")
+			return ext;
+	}
+	return "";
+}
+
+bool	AudioAn::checkSymbol(string fileName)
 {
-	for (size_t i = 0; i < fileName.length(); i++)
+	if (!fileName.empty())
 	{
-		if (fileName[i])
+		for (string::size_type i = 0; i < fileName.length(); i++)
 		{
-			while (fileName[i] != '\0')
+			if (fileName[i])
 			{
-				if (fileName[i] == '_')
-					return (false);
-				else if (fileName[i] == '.')
-					return (true);
-				i++;
+				while (fileName[i] != '\0')
+				{
+					if (fileName[i] == '.')				
+						return (true);
+					else if (fileName[i] == '_')
+						return (false);
+					i++;
+				}
 			}
 		}
+	} else {
+		throw ParsException("Filename is empty");
 	}
 	return (false);
 }
 
-bool	AudioAn::alreadyExist(std::string filename)
+bool	AudioAn::alreadyExist(string filename)
 {
-	const char*	keys[12] = { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
+	const char*	keys[] = { "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#" };
 
-	for (size_t i = 0; i < 12; i++)
+	for (const char* key : keys) 
 	{
-		for (size_t y = 0; keys[i][y] != '\0'; y++)
+		string	keyString = key;
+		std::size_t	pos = filename.find(keyString);
+		while (pos != std::string::npos)
 		{
-			for (size_t j = 0; j < filename.size(); j++)
-				if (filename[j] == '_' && filename[j + 1] == keys[i][y])
-					return (false);
+			if (filename[pos + keyString.length()] != '_') return (true);
+			pos = filename.find(keyString, pos + 1);
 		}
 	}
-	return (true);
+	return (false);
 }
